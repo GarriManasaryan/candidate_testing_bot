@@ -15,3 +15,4 @@ path_to_download = os.path.join(os.getcwd(), 'downloaded_tasks')
 # spreadsheet_with_candidates_info
 spreadsheet_id = credentials.get('spreadsheet_id')
 sheet_name = credentials.get('sheet_name')
+company = credentials.get('company_name')
