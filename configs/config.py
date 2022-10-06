@@ -28,4 +28,10 @@ with open(os.path.join(os.getcwd(), 'spam_defender', 'already_processed_users.js
 
 # message templates
 further_instructions_message = 'contact your HR coordinator for further instructions'
+welcome_message = f'Welcome to {company} Candidates\' Assessment System! Before we begin, send me your token (candidate_id) like this:\ncand-xx-00000000-xx-0000-000000000000'
+verifying_token = f'Verifying token, just a moment'
 banned_message = f'Sorry, but you\'ve been banned for spamming; {further_instructions_message}'
+invalid_token = f'Invalid token, permission denied; {further_instructions_message}'
+file_download = f'Perfect, downloading test files...'
+error_downloading_files = f'Something went wrong while donwloading your tasks; {further_instructions_message}'
+old_users = f'Your token has been expired; {further_instructions_message}'
