@@ -5,6 +5,7 @@ __pycache__/
 *.docx
 # C extensions
 *.so
+notes.txt
 
 # Distribution / packaging
 .Python
