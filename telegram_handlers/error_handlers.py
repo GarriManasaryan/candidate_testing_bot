@@ -11,10 +11,16 @@ def message_error_handler():
                 return result
 
             except Exception as e:
-                message = args[0]
+                message_or_call = args[0]
+
+                try:
+                    chat_id = message_or_call.message.chat.id # call obj
+                except:
+                    chat_id = message_or_call.chat.id # message obj
+
                 exception_name = (type(e).__name__)
-                bot.send_message(message.chat.id, "Something went wrong")
-                bot.send_message(message.chat.id, f'{exception_name}: {e}')
+                bot.send_message(chat_id, "Something went wrong")
+                bot.send_message(chat_id, f'{exception_name}: {e}')
 
         return wrapper_func
 

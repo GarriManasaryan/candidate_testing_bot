@@ -39,7 +39,7 @@ class GoogleServiceHandler():
     def docs_downloader_from_drive(self, fileId, mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document'):
         request = self.service.files().export_media(fileId=fileId, mimeType=mimeType)
 
-        fh = io.FileIO(os.path.join(path_to_download, 'Task.docx'), 'wb')
+        fh = io.FileIO(os.path.join(path_to_download, 'Clinical_task.docx'), 'wb')
         downloader = MediaIoBaseDownload(fh, request)
         done = False
         while done is False:
