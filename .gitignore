@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 notes.txt
+*.xlsx
 
 # Distribution / packaging
 .Python
