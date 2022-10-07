@@ -7,6 +7,7 @@ from time import sleep
 gsr = GoogleServiceHandler()
 
 spam_counter = {}
+
 @bot.message_handler(content_types=['text'])
 @message_error_handler()
 def welcome(message):
@@ -21,12 +22,15 @@ def welcome(message):
     else:
         text = message.text
 
-        if text == 'e':
+        if text == 'ee':
             os._exit(0)
 
-        elif text == 'tset':
+        elif text == 't':
             # gsr.docs_downloader_from_drive(fileId = 'https://docs.google.com/document/d/1XwkUaq0hvAjWlzzl2D5t-tgQKAUEHYw7_q3A9vSuG6Y/edit'.split('/')[-2])
-            bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Task.docx'), 'rb'), caption = 'caption', parse_mode='html')
+            # bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Task.docx'), 'rb'), caption = 'caption', parse_mode='html')
+            bot.send_message(chat_id, full_task_instr, parse_mode='html')
+            bot.send_message(chat_id, just_clinical_task_instr, parse_mode='html')
+            bot.send_message(chat_id, just_excel_instr, parse_mode='html')
 
         elif text == '/start':
             clicked = spam_counter.get(chat_id, 0)
