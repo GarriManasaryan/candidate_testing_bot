@@ -40,7 +40,7 @@ old_users = f'Your token has been expired; {further_instructions_message}'
 instruction_start = 'Instructions:'
 instruction_time_limit_excel = 'Time limit: <b>4 hours</b>'
 instruction_time_limit_clinical = 'Time limit: <b>1 week</b> (approximately)'
-sep_file_instr = 'If you have several files, you need to click "Submit answers" for every file separately and send them one at a time'
+sep_file_instr = 'If you have several files, you need to click "Submit answers" for every file separately and send them one by one'
 
 instruction_clinical_part = f'• <u>Clinical part</u>: theoretical questions in a cancer-specific field.\n{instruction_time_limit_excel}'
 instruction_excel = f'• <u>Excel basics</u>: you will be given an excel file with a series of practice tasks. For example, calculate duplicated values in the table or filter data using formulas etc.\n{instruction_time_limit_clinical}'
