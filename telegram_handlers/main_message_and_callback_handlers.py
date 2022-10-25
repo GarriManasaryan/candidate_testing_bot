@@ -22,20 +22,7 @@ def welcome(message):
     else:
         text = message.text
 
-        if text == 'ee':
-            os._exit(0)
-
-        elif text == 't':
-            # gsr.docs_downloader_from_drive(fileId = 'https://docs.google.com/document/d/1XwkUaq0hvAjWlzzl2D5t-tgQKAUEHYw7_q3A9vSuG6Y/edit'.split('/')[-2])
-            # bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Task.docx'), 'rb'), caption = 'caption', parse_mode='html')
-            # bot.send_message(chat_id, just_clinical_task_instr, parse_mode='html')
-            # bot.send_message(chat_id, just_excel_instr, parse_mode='html')
-
-            markup = InlineKeyboardMarkup(row_width=2)
-            markup.add(InlineKeyboardButton('Start', callback_data='start_the_test'))
-            bot.send_message(chat_id, full_task_instr, parse_mode='html', reply_markup=markup)
-
-        elif text == '/start':
+        if text == '/start':
             clicked = spam_counter.get(chat_id, 0)
             spam_counter[chat_id] = clicked + 1
 
@@ -67,7 +54,9 @@ def process_token_from_candidate(message):
     else:
         df_candidate = df_all_candidates[df_all_candidates['token'] == token]
         candidate_info_dict = df_candidate.to_dict('records')[0]
-        candidate_info_dict['submitted_excel_answer'] = False
+        candidate_info_dict['submitted_excel_answer'] = True if candidate_info_dict['Send_excel_test_too'] != 'Yes' else False
+        candidate_info_dict['submitted_docx_answer'] = False
+
         token_end = token.split('-')[-1]
 
         process_candidate_temp_info(message, token_end, 'save_dict', candidate_info_dict)
@@ -79,7 +68,7 @@ def process_token_from_candidate(message):
             gsr.docs_downloader_from_drive(fileId = fileId)
 
             markup = InlineKeyboardMarkup(row_width=2)
-            markup.add(InlineKeyboardButton('Start', callback_data=f'start_the_test_{token_end}'))
+            markup.add(InlineKeyboardButton('Start', callback_data=f'start_the_test_{token_end}')) # removing token might lead to concurrency issues: one user calls functions, overwriting prev calls and reminders
 
             if candidate_info_dict.get('Send_excel_test_too') == 'Yes':
                 bot.send_message(chat_id, full_task_instr, parse_mode='html', reply_markup=markup)
@@ -102,14 +91,14 @@ def process_candidate_temp_info(message_or_call, token_end, mode = 'get_all', ca
         with open(path_to_file, 'w') as f:
             json.dump(candidate_dict, f, indent = 2)
 
-    elif mode == 'excel_answer_submitted':
+    elif mode in ['excel', 'docx']:
         with open(path_to_file) as f:
             candidate_dict = json.load(f)
 
-        candidate_dict['submitted_excel_answer'] = True
+        candidate_dict[f'submitted_{mode}_answer'] = True
 
         with open(path_to_file, 'w') as f:
-            json.dump(candidate_dict, f)
+            json.dump(candidate_dict, f, indent = 2)
 
 @message_error_handler()
 def time_left_reminder(message_or_call, excel_finish_time, token_end, time_left_text):
@@ -135,8 +124,7 @@ def get_file_msg(message, token_end, mode):
     with open(os.path.join(path_to_download, file_name), 'wb') as new_file:
         new_file.write(downloaded_file)
 
-    if mode == 'excel':
-        process_candidate_temp_info(message, token_end, 'excel_answer_submitted')
+    process_candidate_temp_info(message, token_end, mode)
 
     bot.send_message(message.chat.id, success_answer_saved)
 
@@ -175,18 +163,28 @@ def callback_handler(call):
 
         elif 'submit_answers' in str(call.data):
 
-            if 'main' in str(call.data):
+            candidate_info_dict = process_candidate_temp_info(call, token_end)
+            excel_already_sent = candidate_info_dict['submitted_excel_answer']
+            docx_already_sent = candidate_info_dict['submitted_docx_answer']
 
-                markup = InlineKeyboardMarkup(row_width=2)
+            if excel_already_sent and docx_already_sent:
+                bot.send_message(chat_id, all_answers_already_submitted)
 
-                if excel_test_too_flag == 'Yes':
-                    markup.add(InlineKeyboardButton('Excel task', callback_data=f'submit_answers_dwnl_excel_{token_end}'))
+            else:
 
-                markup.add(InlineKeyboardButton('Clinical part', callback_data=f'submit_answers_dwnl_docx_{token_end}'))
+                if 'main' in str(call.data):
 
-                bot.send_message(chat_id, choose_answer_section, parse_mode='html', reply_markup=markup)
 
-            elif 'dwnl' in str(call.data):
-                mode = 'excel' if 'excel' in str(call.data) else 'docx'
-                msg = bot.send_message(chat_id, great_send_file)
-                bot.register_next_step_handler(msg, get_file_msg, token_end, mode)
+                    markup = InlineKeyboardMarkup(row_width=2)
+
+                    if excel_test_too_flag == 'Yes' and not excel_already_sent:
+                        markup.add(InlineKeyboardButton('Excel task', callback_data=f'submit_answers_dwnl_excel_{token_end}'))
+
+                    markup.add(InlineKeyboardButton('Clinical part', callback_data=f'submit_answers_dwnl_docx_{token_end}'))
+
+                    bot.send_message(chat_id, choose_answer_section, parse_mode='html', reply_markup=markup)
+
+                elif 'dwnl' in str(call.data):
+                    mode = 'excel' if 'excel' in str(call.data) else 'docx'
+                    msg = bot.send_message(chat_id, great_send_file)
+                    bot.register_next_step_handler(msg, get_file_msg, token_end, mode)

@@ -62,6 +62,7 @@ submit_answers = f'When you are done, press "Submit answers". {sep_file_instr}'
 choose_answer_section = 'Which task?'
 great_send_file = 'Great! Send the file'
 success_answer_saved = 'Successfully saved the answer!'
+all_answers_already_submitted = 'You have already submitted all answers'
 
 # reminders
 time_left_base_message = 'Warning! You have less than <b>TIME_LEFT minutes</b> to submit an excel task'
