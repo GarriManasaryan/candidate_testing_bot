@@ -37,8 +37,13 @@ error_downloading_files = f'Something went wrong while donwloading your tasks; {
 old_users = f'Your token has been expired; {further_instructions_message}'
 
 # instructions
+excel_time_limit = 4
+time_difference = 8
+timedelta_time_left_30_min = excel_time_limit - 0.5 + time_difference
+timedelta_time_left_5_min = excel_time_limit - 0.08 + time_difference
+
 instruction_start = 'Instructions:'
-instruction_time_limit_excel = 'Time limit: <b>4 hours</b>'
+instruction_time_limit_excel = f'Time limit: <b>{str(excel_time_limit)} hours</b>'
 instruction_time_limit_clinical = 'Time limit: <b>1 week</b> (approximately)'
 sep_file_instr = 'If you have several files, you need to click "Submit answers" for every file separately and send them one by one'
 
@@ -56,3 +61,9 @@ just_excel_instr = '\n\n'.join([instruction_start, instruction_excel, instructio
 submit_answers = f'When you are done, press "Submit answers". {sep_file_instr}'
 choose_answer_section = 'Which task?'
 great_send_file = 'Great! Send the file'
+success_answer_saved = 'Successfully saved the answer!'
+
+# reminders
+time_left_base_message = 'Warning! You have less than <b>TIME_LEFT minutes</b> to submit an excel task'
+time_left_30_min_message = time_left_base_message.replace('TIME_LEFT', '30')
+time_left_5_min_message = time_left_base_message.replace('TIME_LEFT', '5')
