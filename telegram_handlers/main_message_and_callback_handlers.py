@@ -39,8 +39,9 @@ def welcome(message):
 
 def old_user_handler(user_chat_id, old_user_reason_list):
     with open(os.path.join(os.getcwd(), 'spam_defender', f'{old_user_reason_list}.json'), 'w') as f:
-        banned_list.append(user_chat_id)
-        json.dump(banned_list, f)
+        source_list = banned_list if old_user_reason_list == 'banned_list' else already_processed_users
+        source_list.append(user_chat_id)
+        json.dump(source_list, f)
 
 @message_error_handler()
 def process_token_from_candidate(message):
