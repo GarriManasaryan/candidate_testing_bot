@@ -22,20 +22,25 @@ def welcome(message):
     else:
         text = message.text
 
-        if text == '/start':
+        if text == 'test':
+            bot.send_message(chat_id, 'test')
+
+        elif text == '/start':
             clicked = spam_counter.get(chat_id, 0)
             spam_counter[chat_id] = clicked + 1
 
             if spam_counter.get(chat_id) > 5:
                 bot.send_message(chat_id, banned_message)
-
-                with open(os.path.join(os.getcwd(), 'spam_defender', 'banned_list.json'), 'w') as f:
-                    banned_list.append(chat_id)
-                    json.dump(banned_list, f)
+                ban_user(chat_id)
 
             else:
                 msg = bot.send_message(chat_id, welcome_message)
                 bot.register_next_step_handler(msg, process_token_from_candidate)
+
+def ban_user(chat_id):
+    with open(os.path.join(os.getcwd(), 'spam_defender', 'banned_list.json'), 'w') as f:
+        banned_list.append(chat_id)
+        json.dump(banned_list, f)
 
 @message_error_handler()
 def process_token_from_candidate(message):
@@ -59,7 +64,7 @@ def process_token_from_candidate(message):
 
         token_end = token.split('-')[-1]
 
-        process_candidate_temp_info(message, token_end, 'save_dict', candidate_info_dict)
+        process_candidate_temp_info(token_end, 'save_dict', candidate_info_dict)
 
         bot.send_message(chat_id, file_download)
 
@@ -79,8 +84,7 @@ def process_token_from_candidate(message):
         except:
             bot.send_message(chat_id, error_downloading_files)
 
-@message_error_handler()
-def process_candidate_temp_info(message_or_call, token_end, mode = 'get_all', candidate_dict = 'provided_with_save_mode'):
+def process_candidate_temp_info(token_end, mode = 'get_all', candidate_dict = 'provided_with_save_mode'):
     path_to_file = os.path.join(os.getcwd(), 'temp_files', f'user_{token_end}.json')
 
     if mode == 'get_all':
@@ -108,7 +112,7 @@ def time_left_reminder(message_or_call, excel_finish_time, token_end, time_left_
         sleep(60)
 
     # check if the answer is already submitted. If so, dont send time left message
-    candidate_info_dict = process_candidate_temp_info(message_or_call, token_end)
+    candidate_info_dict = process_candidate_temp_info(token_end)
     already_submitted_excel_answer = candidate_info_dict['submitted_excel_answer']
 
     if not already_submitted_excel_answer:
@@ -124,9 +128,18 @@ def get_file_msg(message, token_end, mode):
     with open(os.path.join(path_to_download, file_name), 'wb') as new_file:
         new_file.write(downloaded_file)
 
-    process_candidate_temp_info(message, token_end, mode)
-
+    process_candidate_temp_info(token_end, mode)
     bot.send_message(message.chat.id, success_answer_saved)
+
+    # check if all asnwers provided
+
+# def check_all_answers_submitted():
+#     candidate_info_dict = process_candidate_temp_info(token_end)
+#     excel_already_sent = candidate_info_dict['submitted_excel_answer']
+#     docx_already_sent = candidate_info_dict['submitted_docx_answer']
+#
+#     if excel_already_sent and docx_already_sent:
+#         bot.send_message(chat_id, all_answers_already_submitted)
 
 @bot.callback_query_handler(func=lambda call: True)
 @message_error_handler()
@@ -136,7 +149,7 @@ def callback_handler(call):
         chat_id = call.message.chat.id
         token_end = str(call.data).split('_')[-1]
 
-        candidate_info_dict = process_candidate_temp_info(call, token_end)
+        candidate_info_dict = process_candidate_temp_info(token_end)
 
         excel_test_too_flag = candidate_info_dict.get('Send_excel_test_too')
 
@@ -163,7 +176,7 @@ def callback_handler(call):
 
         elif 'submit_answers' in str(call.data):
 
-            candidate_info_dict = process_candidate_temp_info(call, token_end)
+            candidate_info_dict = process_candidate_temp_info(token_end)
             excel_already_sent = candidate_info_dict['submitted_excel_answer']
             docx_already_sent = candidate_info_dict['submitted_docx_answer']
 
