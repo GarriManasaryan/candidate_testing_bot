@@ -85,7 +85,7 @@ def process_token_from_candidate(message):
         except:
             bot.send_message(chat_id, error_downloading_files)
 
-def process_candidate_temp_info(token_end, mode = 'get_all', candidate_dict = 'provided_with_save_mode'):
+def process_candidate_temp_info(token_end, mode = 'get_all', candidate_dict = 'provided_with_save_mode', file_name = 'provided_with_files_mode'):
     path_to_file = os.path.join(os.getcwd(), 'temp_files', f'user_{token_end}.json')
 
     if mode == 'get_all':
@@ -101,6 +101,7 @@ def process_candidate_temp_info(token_end, mode = 'get_all', candidate_dict = 'p
             candidate_dict = json.load(f)
 
         candidate_dict[f'submitted_{mode}_answer'] = True
+        candidate_dict[f'{mode}_file_name'] = file_name
 
         with open(path_to_file, 'w') as f:
             json.dump(candidate_dict, f, indent = 2)
@@ -122,14 +123,19 @@ def time_left_reminder(message_or_call, excel_finish_time, token_end, time_left_
 
 @message_error_handler()
 def get_file_msg(message, token_end, mode):
-    file_name = 'Answers_' + message.document.file_name
+    candidate_info_dict = process_candidate_temp_info(token_end)
+    first_name = candidate_info_dict.get('First_name', 'First_name')
+    last_name = candidate_info_dict.get('Last_name', 'Last_name')
+
+    file_name = '_'.join([last_name, first_name, token_end[:4], message.document.file_name])
+
     file_info = bot.get_file(message.document.file_id)
     downloaded_file = bot.download_file(file_info.file_path)
 
     with open(os.path.join(path_to_download, file_name), 'wb') as new_file:
         new_file.write(downloaded_file)
 
-    process_candidate_temp_info(token_end, mode)
+    process_candidate_temp_info(token_end, mode, file_name = file_name)
     bot.send_message(message.chat.id, success_answer_saved)
 
 @bot.callback_query_handler(func=lambda call: True)

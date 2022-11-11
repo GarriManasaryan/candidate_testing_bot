@@ -12,7 +12,10 @@ def logger(message_or_call, error_msg = 'Successful'):
     try:
         msg_text = message_or_call.text[:65].replace('\n', '. ')
     except:
-        msg_text = message_or_call.data
+        try:
+            msg_text = message_or_call.data
+        except:
+            msg_text = 'file'
 
     status = 'OK' if error_msg == 'Successful' else 'ERROR'
 
