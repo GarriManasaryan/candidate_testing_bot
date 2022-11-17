@@ -121,17 +121,18 @@ def time_left_reminder(message_or_call, excel_finish_time, token_end, time_left_
         chat_id = get_chat_id_from_call_or_msg(message_or_call)
         bot.send_message(chat_id, time_left_text, parse_mode='html')
 
-def both_tasks_finished(token_end):
+def check_if_both_tasks_are_finished(token_end):
     candidate_info_dict = process_candidate_temp_info(token_end)
     excel_already_sent = candidate_info_dict['submitted_excel_answer']
     docx_already_sent = candidate_info_dict['submitted_docx_answer']
 
     condition_to_check = excel_already_sent and docx_already_sent
 
-    return condition_to_check
+    return condition_to_check, candidate_info_dict
 
 def upload_results_to_google_sheet(token_end):
     try:
+        # in prev step is updated → refresh
         candidate_info_dict = process_candidate_temp_info(token_end)
         token = candidate_info_dict.get('token')
 
@@ -154,7 +155,7 @@ def upload_results_to_google_sheet(token_end):
     except Exception as e:
         print(repr(e))
 
-def upload_to_google_folder(token_end):
+def upload_to_google_folder(token_end, candidate_info_dict):
 
     # create candidate folder in google drive
     team_parent_folder_id = credentials['teams'][candidate_info_dict['CIT_department']]
@@ -192,8 +193,10 @@ def get_file_msg(message, token_end, mode):
     bot.send_message(message.chat.id, success_answer_saved)
 
     # if completed, create google folder per candidate and fill google sheet with time results
-    if both_tasks_finished(token_end):
-        upload_to_google_folder(token_end)
+    both_tasks_are_finished, candidate_info_dict = check_if_both_tasks_are_finished(token_end)
+
+    if both_tasks_are_finished:
+        upload_to_google_folder(token_end, candidate_info_dict)
         upload_results_to_google_sheet(token_end)
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -236,14 +239,15 @@ def callback_handler(call):
 
             elif 'submit_answers' in str(call.data):
 
-                if both_tasks_finished(token_end):
+                both_tasks_are_finished = check_if_both_tasks_are_finished(token_end)[0]
+
+                if both_tasks_are_finished:
                     old_user_handler(chat_id, 'already_processed_users')
                     bot.send_message(chat_id, all_answers_already_submitted)
 
                 else:
 
                     if 'main' in str(call.data):
-
 
                         markup = InlineKeyboardMarkup(row_width=2)
 
