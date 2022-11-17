@@ -52,7 +52,7 @@ class GoogleServiceHandler():
         worksheet = sh.worksheet(self.sheet_name)
         df = pd.DataFrame(worksheet.get_all_records())
 
-        return df
+        return df, worksheet
 
     def create_google_folder(self, parent_folder_id, folder_name):
         file_metadata = {
@@ -78,3 +78,6 @@ class GoogleServiceHandler():
         media = MediaFileUpload(file_full_path, mimetype=mimetype)
 
         return self.service.files().create(body=file_metadata, media_body=media).execute()
+
+    def update_row(self, worksheet, list_of_values, row_num):
+        worksheet.update(f'{row_num}:{row_num}', [list_of_values])

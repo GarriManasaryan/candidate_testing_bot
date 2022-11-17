@@ -51,7 +51,7 @@ def process_token_from_candidate(message):
     bot.send_message(chat_id, verifying_token)
     sleep(1)
 
-    df_all_candidates = gsr.get_google_sheet_df()
+    df_all_candidates, worksheet = gsr.get_google_sheet_df()
     all_tokens = set(df_all_candidates['token'])
 
     if not token in all_tokens:
@@ -121,27 +121,58 @@ def time_left_reminder(message_or_call, excel_finish_time, token_end, time_left_
         chat_id = get_chat_id_from_call_or_msg(message_or_call)
         bot.send_message(chat_id, time_left_text, parse_mode='html')
 
-def upload_to_google_folder_when_finished(token_end):
+def both_tasks_finished(token_end):
     candidate_info_dict = process_candidate_temp_info(token_end)
     excel_already_sent = candidate_info_dict['submitted_excel_answer']
     docx_already_sent = candidate_info_dict['submitted_docx_answer']
 
-    if excel_already_sent and docx_already_sent:
-        # create candidate folder in google drive
-        team_parent_folder_id = credentials['teams'][candidate_info_dict['CIT_department']]
-        folder_name = candidate_info_dict['Last_name'] + '_' + candidate_info_dict['First_name']
-        res_candidate_folder_id = gsr.create_google_folder(team_parent_folder_id, folder_name).get('id')
-        candidate_info_dict['Link_to_candidate_google_folder'] = f'https://drive.google.com/drive/u/0/folders/{res_candidate_folder_id}'
+    condition_to_check = excel_already_sent and docx_already_sent
 
-        # upload files
-        for key, value in candidate_info_dict.items():
-            if 'file_name' in key:
-                file_name = value
-                file_full_path = os.path.join(os.getcwd(), 'downloaded_tasks', file_name)
-                mimetype = key.split('_')[0]
+    return condition_to_check
 
-                sleep(5)
-                gsr.add_file_to_google_folder(res_candidate_folder_id, file_name, file_full_path, mimetype)
+def upload_results_to_google_sheet(token_end):
+    try:
+        candidate_info_dict = process_candidate_temp_info(token_end)
+        token = candidate_info_dict.get('token')
+
+        df_all_candidates, worksheet = gsr.get_google_sheet_df()
+        df_all_candidates = df_all_candidates.reset_index(drop=True)
+        df_candidate_filter = df_all_candidates[df_all_candidates['token']==token]
+
+        for i, row in df_candidate_filter.iterrows():
+            df_candidate_filter.loc[i, 'Start_time'] = candidate_info_dict.get('Start_time')
+            df_candidate_filter.loc[i, 'End_time'] = candidate_info_dict.get('End_time')
+            df_candidate_filter.loc[i, 'Time_spent'] = candidate_info_dict.get('Time_spent')
+            df_candidate_filter.loc[i, 'Finished_in_time'] = candidate_info_dict.get('Finished_in_time')
+            df_candidate_filter.loc[i, 'Link_to_candidate_google_folder'] = candidate_info_dict.get('Link_to_candidate_google_folder')
+
+        row_index = list(df_candidate_filter.index)[0]
+        new_row = list(df_candidate_filter.loc[row_index])
+
+        gsr.update_row(worksheet, new_row, row_index + 2)
+
+    except Exception as e:
+        print(repr(e))
+
+def upload_to_google_folder(token_end):
+
+    # create candidate folder in google drive
+    team_parent_folder_id = credentials['teams'][candidate_info_dict['CIT_department']]
+    folder_name = candidate_info_dict['Last_name'] + '_' + candidate_info_dict['First_name']
+    res_candidate_folder_id = gsr.create_google_folder(team_parent_folder_id, folder_name).get('id')
+    candidate_info_dict['Link_to_candidate_google_folder'] = f'https://drive.google.com/drive/u/0/folders/{res_candidate_folder_id}'
+
+    process_candidate_temp_info(token_end, 'save_dict', candidate_info_dict)
+
+    # upload files
+    for key, value in candidate_info_dict.items():
+        if 'file_name' in key:
+            file_name = value
+            file_full_path = os.path.join(os.getcwd(), 'downloaded_tasks', file_name)
+            mimetype = key.split('_')[0]
+
+            sleep(5)
+            gsr.add_file_to_google_folder(res_candidate_folder_id, file_name, file_full_path, mimetype)
 
 @message_error_handler()
 def get_file_msg(message, token_end, mode):
@@ -160,7 +191,10 @@ def get_file_msg(message, token_end, mode):
     process_candidate_temp_info(token_end, mode, file_name = file_name)
     bot.send_message(message.chat.id, success_answer_saved)
 
-    upload_to_google_folder_when_finished(token_end)
+    # if completed, create google folder per candidate and fill google sheet with time results
+    if both_tasks_finished(token_end):
+        upload_to_google_folder(token_end)
+        upload_results_to_google_sheet(token_end)
 
 @bot.callback_query_handler(func=lambda call: True)
 @message_error_handler()
@@ -202,11 +236,7 @@ def callback_handler(call):
 
             elif 'submit_answers' in str(call.data):
 
-                candidate_info_dict = process_candidate_temp_info(token_end)
-                excel_already_sent = candidate_info_dict['submitted_excel_answer']
-                docx_already_sent = candidate_info_dict['submitted_docx_answer']
-
-                if excel_already_sent and docx_already_sent:
+                if both_tasks_finished(token_end):
                     old_user_handler(chat_id, 'already_processed_users')
                     bot.send_message(chat_id, all_answers_already_submitted)
 
