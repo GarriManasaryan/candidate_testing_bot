@@ -16,6 +16,8 @@ class GoogleServiceHandler():
         self.path_to_download = path_to_download
         self.spreadsheet_id = spreadsheet_id
         self.sheet_name = sheet_name
+        self.docx_mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        self.excel_mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     @staticmethod
     def generate_service(path_to_json):
@@ -36,8 +38,8 @@ class GoogleServiceHandler():
         auth_gsr = gspread.authorize(credentials_gm)
         return auth_gsr
 
-    def docs_downloader_from_drive(self, fileId, mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document'):
-        request = self.service.files().export_media(fileId=fileId, mimeType=mimeType)
+    def docs_downloader_from_drive(self, fileId):
+        request = self.service.files().export_media(fileId=fileId, mimeType=self.docx_mimetype)
 
         fh = io.FileIO(os.path.join(path_to_download, 'Clinical_task.docx'), 'wb')
         downloader = MediaIoBaseDownload(fh, request)
@@ -50,4 +52,32 @@ class GoogleServiceHandler():
         worksheet = sh.worksheet(self.sheet_name)
         df = pd.DataFrame(worksheet.get_all_records())
 
-        return df
+        return df, worksheet
+
+    def create_google_folder(self, parent_folder_id, folder_name):
+        file_metadata = {
+            'name': folder_name,
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents':[parent_folder_id]
+        }
+
+        return self.service.files().create(body=file_metadata, fields='id').execute()
+
+    def add_file_to_google_folder(self, parent_folder_id, file_name, file_full_path, file_type):
+        file_metadata = {
+            'name': file_name,
+            'parents':[parent_folder_id]
+        }
+
+        if file_type == 'docx':
+            mimetype = self.docx_mimetype
+
+        elif file_type == 'excel':
+            mimetype = self.excel_mimetype
+
+        media = MediaFileUpload(file_full_path, mimetype=mimetype)
+
+        return self.service.files().create(body=file_metadata, media_body=media).execute()
+
+    def update_row(self, worksheet, list_of_values, row_num):
+        worksheet.update(f'{row_num}:{row_num}', [list_of_values])
