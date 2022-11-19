@@ -8,6 +8,11 @@ with open (Path.home().joinpath('creds_and_tokens.json')) as f:
 # telegram token
 TOKEN = credentials.get('telegram_token')
 
+# email
+source_email = credentials.get('EMAIL_ADDRESS')
+email_password = credentials.get('EMAIL_PASSWORD')
+email_from = credentials.get('EMAIL_FROM')
+
 # google service
 path_to_google_drive_service_account_json = Path.home().joinpath('google_drive_service.json')
 

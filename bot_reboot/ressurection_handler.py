@@ -1,4 +1,5 @@
 from time import sleep
+import os
 
 def bot_priest():
 
@@ -13,7 +14,11 @@ def bot_priest():
 
                 except Exception as e:
                     print('\n---Oups! It seems i\'ve just died... for some reason. Rebooting in 60 seconds---\n')
+
                     print(f'Detailed error: {repr(e)}')
+                    with open(os.path.join(os.getcwd(), 'temp_files', 'bot_logs.txt'), 'a') as f:
+                        f.write(f'\n{repr(e)}\n')
+
                     sleep(60)
                     print('\n---Successfully resurrected myself---\n')
 
