@@ -199,6 +199,17 @@ def get_file_msg(message, token_end, mode):
         upload_to_google_folder(token_end, candidate_info_dict)
         upload_results_to_google_sheet(token_end)
 
+def calculate_spent_time(token_end):
+    candidate_info_dict = process_candidate_temp_info(token_end)
+    candidate_info_dict['End_time'] = datetime.strftime(datetime.now(),'%H:%M - %d.%m.%Y')
+
+    time_spent = round((datetime.strptime(candidate_info_dict['End_time'], '%H:%M - %d.%m.%Y') - datetime.strptime(candidate_info_dict['Start_time'], '%H:%M - %d.%m.%Y')).total_seconds()/60/60, 2)
+
+    candidate_info_dict['Time_spent'] = time_spent
+    candidate_info_dict['Finished_in_time'] = time_spent < 4
+
+    process_candidate_temp_info(token_end, 'save_dict', candidate_info_dict)
+
 @bot.callback_query_handler(func=lambda call: True)
 @message_error_handler()
 def callback_handler(call):
@@ -212,36 +223,49 @@ def callback_handler(call):
         else:
             token_end = str(call.data).split('_')[-1]
 
-            candidate_info_dict = process_candidate_temp_info(token_end)
+            both_tasks_are_finished, candidate_info_dict = check_if_both_tasks_are_finished(token_end)
 
             excel_test_too_flag = candidate_info_dict.get('Send_excel_test_too')
 
             if 'start_the_test' in str(call.data):
 
-                excel_finish_time_30_min_reminder = datetime.now() + timedelta(hours = timedelta_time_left_30_min)
-                excel_finish_time_5_min_reminder = datetime.now() + timedelta(hours = timedelta_time_left_5_min)
+                if both_tasks_are_finished:
+                    bot.send_message(chat_id, both_answers_have_been_submitted)
 
-                if excel_test_too_flag == 'Yes':
-                    bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Excel_task.xlsx'), 'rb'), caption = instruction_time_limit_excel, parse_mode='html')
+                elif candidate_info_dict['Start_time'] != '':
+                    bot.send_message(chat_id, start_already_pushed)
 
-                bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Clinical_task.docx'), 'rb'), caption = instruction_time_limit_clinical, parse_mode='html')
+                else:
 
-                markup = InlineKeyboardMarkup(row_width=2)
-                markup.add(InlineKeyboardButton('Submit answers', callback_data=f'submit_answers_main_{token_end}'))
-                bot.send_message(chat_id, submit_answers, parse_mode='html', reply_markup=markup)
+                    candidate_info_dict['Start_time'] = datetime.strftime(datetime.now(),'%H:%M - %d.%m.%Y')
 
-                if excel_test_too_flag == 'Yes':
-                    # 30 min before
-                    time_left_reminder(call, excel_finish_time_30_min_reminder, token_end, time_left_30_min_message)
+                    process_candidate_temp_info(token_end, 'save_dict', candidate_info_dict)
 
-                    # 5 min before
-                    time_left_reminder(call, excel_finish_time_5_min_reminder, token_end, time_left_5_min_message)
+                    excel_finish_time_30_min_reminder = datetime.now() + timedelta(hours = timedelta_time_left_30_min)
+                    excel_finish_time_5_min_reminder = datetime.now() + timedelta(hours = timedelta_time_left_5_min)
+
+                    if excel_test_too_flag == 'Yes':
+                        bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Excel_task.xlsx'), 'rb'), caption = instruction_time_limit_excel, parse_mode='html')
+
+                    bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Clinical_task.docx'), 'rb'), caption = instruction_time_limit_clinical, parse_mode='html')
+
+                    markup = InlineKeyboardMarkup(row_width=2)
+                    markup.add(InlineKeyboardButton('Submit answers', callback_data=f'submit_answers_main_{token_end}'))
+                    bot.send_message(chat_id, submit_answers, parse_mode='html', reply_markup=markup)
+
+                    if excel_test_too_flag == 'Yes':
+                        # 30 min before
+                        time_left_reminder(call, excel_finish_time_30_min_reminder, token_end, time_left_30_min_message)
+
+                        # 5 min before
+                        time_left_reminder(call, excel_finish_time_5_min_reminder, token_end, time_left_5_min_message)
 
             elif 'submit_answers' in str(call.data):
 
-                both_tasks_are_finished = check_if_both_tasks_are_finished(token_end)[0]
+                excel_already_sent = candidate_info_dict['submitted_excel_answer']
+                docx_already_sent = candidate_info_dict['submitted_docx_answer']
 
-                if both_tasks_are_finished:
+                if excel_already_sent and docx_already_sent:
                     old_user_handler(chat_id, 'already_processed_users')
                     bot.send_message(chat_id, all_answers_already_submitted)
 
@@ -251,14 +275,35 @@ def callback_handler(call):
 
                         markup = InlineKeyboardMarkup(row_width=2)
 
-                        if excel_test_too_flag == 'Yes' and not excel_already_sent:
+                        if not excel_already_sent and not docx_already_sent:
+
+                            if excel_test_too_flag == 'Yes':
+                                markup.add(InlineKeyboardButton('Excel task', callback_data=f'submit_answers_dwnl_excel_{token_end}'))
+
+                            markup.add(InlineKeyboardButton('Clinical part', callback_data=f'submit_answers_dwnl_docx_{token_end}'))
+                            bot.send_message(chat_id, choose_answer_section, parse_mode='html', reply_markup=markup)
+
+                        elif excel_already_sent and not docx_already_sent:
+                            markup.add(InlineKeyboardButton('Clinical part', callback_data=f'submit_answers_dwnl_docx_{token_end}'))
+                            bot.send_message(chat_id, choose_answer_section, parse_mode='html', reply_markup=markup)
+
+                        elif not excel_already_sent and docx_already_sent:
                             markup.add(InlineKeyboardButton('Excel task', callback_data=f'submit_answers_dwnl_excel_{token_end}'))
+                            bot.send_message(chat_id, choose_answer_section, parse_mode='html', reply_markup=markup)
 
-                        markup.add(InlineKeyboardButton('Clinical part', callback_data=f'submit_answers_dwnl_docx_{token_end}'))
-
-                        bot.send_message(chat_id, choose_answer_section, parse_mode='html', reply_markup=markup)
+                        else:
+                            bot.send_message(chat_id, answer_already_provided)
 
                     elif 'dwnl' in str(call.data):
                         mode = 'excel' if 'excel' in str(call.data) else 'docx'
-                        msg = bot.send_message(chat_id, great_send_file)
-                        bot.register_next_step_handler(msg, get_file_msg, token_end, mode)
+
+                        if (docx_already_sent and mode == 'docx') or (excel_already_sent and mode == 'excel'):
+                            bot.send_message(chat_id, answer_already_provided)
+
+                        else:
+
+                            if mode == 'excel':
+                                calculate_spent_time(token_end)
+
+                            msg = bot.send_message(chat_id, great_send_file)
+                            bot.register_next_step_handler(msg, get_file_msg, token_end, mode)
