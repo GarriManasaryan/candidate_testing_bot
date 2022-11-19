@@ -21,14 +21,6 @@ def welcome(message):
     else:
         text = message.text
 
-        if text == 'test':
-            print(A)
-            if user_is_spamming(message, chat_id):
-                bot.send_message(chat_id, banned_message)
-
-            else:
-                bot.send_message(chat_id, 'all good')
-
         if text == '/start':
             if user_is_spamming(message, chat_id):
                 bot.send_message(chat_id, banned_message)
@@ -40,19 +32,24 @@ def welcome(message):
 @message_error_handler()
 def user_is_spamming(message, chat_id):
     chat_id_string = str(chat_id)
-    with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json')) as f:
-        spam_counter = json.load(f)
 
-    clicked = spam_counter.get(chat_id_string, 0)
-    spam_counter[chat_id_string] = clicked + 1
+    if chat_id_string != developer_chat_id:
+        with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json')) as f:
+            spam_counter = json.load(f)
 
-    with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json'), 'w') as f:
-        json.dump(spam_counter, f)
+        clicked = spam_counter.get(chat_id_string, 0)
+        spam_counter[chat_id_string] = clicked + 1
 
-    if spam_counter.get(chat_id_string) > 3:
-        old_user_handler(chat_id, 'banned_list')
+        with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json'), 'w') as f:
+            json.dump(spam_counter, f)
 
-        return True
+        if spam_counter.get(chat_id_string) > 3:
+            old_user_handler(chat_id, 'banned_list')
+            return True
+
+        else:
+            return False
+
     else:
         return False
 
@@ -197,29 +194,41 @@ def upload_to_google_folder(token_end, candidate_info_dict):
             sleep(5)
             gsr.add_file_to_google_folder(res_candidate_folder_id, file_name, file_full_path, mimetype)
 
+def sent_answer_files_are_in_correct_format(message, mode):
+    file_format = message.document.file_name.split('.')[-1]
+
+    if (mode == 'excel' and file_format == 'xlsx') or (mode == 'docx' and file_format == 'docx'):
+        return True
+
 @message_error_handler()
 def get_file_msg(message, token_end, mode):
-    candidate_info_dict = process_candidate_temp_info(token_end)
-    first_name = candidate_info_dict.get('First_name', 'First_name')
-    last_name = candidate_info_dict.get('Last_name', 'Last_name')
 
-    file_name = '_'.join([last_name, first_name, token_end[:4], message.document.file_name])
+    if sent_answer_files_are_in_correct_format(message, mode):
+        candidate_info_dict = process_candidate_temp_info(token_end)
+        first_name = candidate_info_dict.get('First_name', 'First_name')
+        last_name = candidate_info_dict.get('Last_name', 'Last_name')
 
-    file_info = bot.get_file(message.document.file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
+        file_name = '_'.join([last_name, first_name, token_end[:4], message.document.file_name])
 
-    with open(os.path.join(path_to_download, file_name), 'wb') as new_file:
-        new_file.write(downloaded_file)
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
 
-    process_candidate_temp_info(token_end, mode, file_name = file_name)
-    bot.send_message(message.chat.id, success_answer_saved)
+        with open(os.path.join(path_to_download, file_name), 'wb') as new_file:
+            new_file.write(downloaded_file)
 
-    # if completed, create google folder per candidate and fill google sheet with time results
-    both_tasks_are_finished, candidate_info_dict = check_if_both_tasks_are_finished(token_end)
+        process_candidate_temp_info(token_end, mode, file_name = file_name)
+        bot.send_message(message.chat.id, success_answer_saved)
 
-    if both_tasks_are_finished:
-        upload_to_google_folder(token_end, candidate_info_dict)
-        upload_results_to_google_sheet(token_end)
+        # if completed, create google folder per candidate and fill google sheet with time results
+        both_tasks_are_finished, candidate_info_dict = check_if_both_tasks_are_finished(token_end)
+
+        if both_tasks_are_finished:
+            upload_to_google_folder(token_end, candidate_info_dict)
+            upload_results_to_google_sheet(token_end)
+
+    else:
+        bot.send_message(message.chat.id, wrong_answer_file_format)
+
 
 def calculate_spent_time(token_end):
     candidate_info_dict = process_candidate_temp_info(token_end)

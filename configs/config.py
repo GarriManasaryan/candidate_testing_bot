@@ -85,3 +85,4 @@ developer = credentials['developer_tag_name']
 error_with_developer = f"An error occurred, plz contact {developer} for further instructions"
 developer_chat_id = credentials['developer_chat_id']
 error_for_developer = 'An error occurred for this user, plz take a look at bot logs and tracebacks'
+wrong_answer_file_format = 'Wrong format, check the file and try again. Reminder:\n\n• Excel task accepts .xlsx file\n\n• Clinical task accepts .docx file'
