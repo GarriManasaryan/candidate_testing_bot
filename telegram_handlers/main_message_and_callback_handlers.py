@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 # connect to drive and google_sheets
 gsr = GoogleServiceHandler()
-spam_counter = {}
 
 @bot.message_handler(content_types=['text'])
 @message_error_handler()
@@ -23,19 +22,38 @@ def welcome(message):
         text = message.text
 
         if text == 'test':
-            bot.send_message(chat_id, 'test')
+            if user_is_spamming(message, chat_id):
+                bot.send_message(chat_id, banned_message)
 
-        elif text == '/start':
-            clicked = spam_counter.get(chat_id, 0)
-            spam_counter[chat_id] = clicked + 1
+            else:
+                bot.send_message(chat_id, 'all good')
 
-            if spam_counter.get(chat_id) > 5:
-                old_user_handler(chat_id, 'banned_list')
+        if text == '/start':
+            if user_is_spamming(message, chat_id):
                 bot.send_message(chat_id, banned_message)
 
             else:
                 msg = bot.send_message(chat_id, welcome_message)
                 bot.register_next_step_handler(msg, process_token_from_candidate)
+
+@message_error_handler()
+def user_is_spamming(message, chat_id):
+    chat_id_string = str(chat_id)
+    with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json')) as f:
+        spam_counter = json.load(f)
+
+    clicked = spam_counter.get(chat_id_string, 0)
+    spam_counter[chat_id_string] = clicked + 1
+
+    with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json'), 'w') as f:
+        json.dump(spam_counter, f)
+
+    if spam_counter.get(chat_id_string) > 3:
+        old_user_handler(chat_id, 'banned_list')
+
+        return True
+    else:
+        return False
 
 def old_user_handler(user_chat_id, old_user_reason_list):
     with open(os.path.join(os.getcwd(), 'spam_defender', f'{old_user_reason_list}.json'), 'w') as f:

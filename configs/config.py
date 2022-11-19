@@ -26,6 +26,9 @@ with open(os.path.join(os.getcwd(), 'spam_defender', 'banned_list.json')) as f:
 with open(os.path.join(os.getcwd(), 'spam_defender', 'already_processed_users.json')) as f:
     already_processed_users = json.load(f)
 
+# with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json')) as f:
+#     spam_counter = json.load(f)
+
 # message templates
 further_instructions_message = 'contact your HR coordinator for further instructions'
 welcome_message = f'Welcome to {company} Candidates\' Assessment System! Before we begin, send me your token (candidate_id) like this:\ncand-xx-00000000-xx-0000-000000000000'
