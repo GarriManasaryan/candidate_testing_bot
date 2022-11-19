@@ -9,7 +9,7 @@ notes.txt
 *.xlsx
 
 temp_files/
-spam_defender/
+spam_defender_files/
 
 # Distribution / packaging
 .Python
