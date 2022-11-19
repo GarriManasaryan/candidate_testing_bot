@@ -22,6 +22,7 @@ def welcome(message):
         text = message.text
 
         if text == 'test':
+            print(A)
             if user_is_spamming(message, chat_id):
                 bot.send_message(chat_id, banned_message)
 

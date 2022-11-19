@@ -79,3 +79,9 @@ both_answers_have_been_submitted = all_answers_already_submitted
 
 # rules
 rules_and_warnings = 'Important rules:\n\n1. All answers should be submitted in the same file and sent back to this bot\n\n2. Don\'t change the format of sent files.\n\n3. Don\'t rename sent files: as mentioned before, just submit your answers and send them back in the same file.\n\n4. You can submit the answer files only once, so be careful'
+
+# Errors and developers
+developer = credentials['developer_tag_name']
+error_with_developer = f"An error occurred, plz contact {developer} for further instructions"
+developer_chat_id = credentials['developer_chat_id']
+error_for_developer = 'An error occurred for this user, plz take a look at bot logs and tracebacks'
