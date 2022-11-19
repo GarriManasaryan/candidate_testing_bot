@@ -201,6 +201,11 @@ def sent_answer_files_are_in_correct_format(message, mode):
     if (mode == 'excel' and file_format == 'xlsx') or (mode == 'docx' and file_format == 'docx'):
         return True
 
+def google_logger(msg_text):
+    print(msg_text)
+    with open(os.path.join(os.getcwd(), 'temp_files', 'bot_logs.txt'), 'a') as f:
+        f.write(f'{msg_text}\n')
+
 @message_error_handler()
 def get_file_msg(message, token_end, mode):
 
@@ -224,8 +229,22 @@ def get_file_msg(message, token_end, mode):
         both_tasks_are_finished, candidate_info_dict = check_if_both_tasks_are_finished(token_end)
 
         if both_tasks_are_finished:
+            # create google folder with candidate's answer
             upload_to_google_folder(token_end, candidate_info_dict)
+            google_logger('-> Saved files to google drive')
+
+            # update google sheets
             upload_results_to_google_sheet(token_end)
+            google_logger('-> Filled results in google sheets')
+
+            # email notification to manager
+            destination_email = candidate_info_dict['CIT_team_lead_email']
+            subject = f'Candidate {last_name} {first_name} finished the test'
+            link_to_main_google = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
+            body = f'Link to candidate\'s results:\n\n{link_to_main_google}'
+
+            gsr.send_email_confirmation(destination_email, subject, body)
+            google_logger('-> Sent a confirmation email')
 
     else:
         bot.send_message(message.chat.id, wrong_answer_file_format)

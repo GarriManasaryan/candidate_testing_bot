@@ -1,9 +1,15 @@
+# google sheets
 from googleapiclient.discovery import build
 from apiclient.http import MediaFileUpload, MediaIoBaseDownload
 from google.oauth2 import service_account
-
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+
+# email
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
+
 import io
 import requests
 import pandas as pd
@@ -81,3 +87,17 @@ class GoogleServiceHandler():
 
     def update_row(self, worksheet, list_of_values, row_num):
         worksheet.update(f'{row_num}:{row_num}', [list_of_values])
+
+    def send_email_confirmation(self, destination_email, subject, body):
+        # prepare message with subject and body
+        message = MIMEMultipart()
+        message['from'] = email_from
+        message['to'] = destination_email
+        message['subject'] = subject
+        message.attach(MIMEText(body))
+
+        with smtplib.SMTP(host = 'smtp.gmail.com', port = 587) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.login(source_email, email_password)
+            smtp.send_message(message)
