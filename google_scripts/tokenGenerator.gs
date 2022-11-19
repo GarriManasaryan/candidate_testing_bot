@@ -16,24 +16,32 @@ function generateTokenPerCandidate(){
       var first_name = table_values[i][2].toString().toLowerCase().replaceAll(' ', '')
       var last_name = table_values[i][3].toString().toLowerCase().replaceAll(' ', '')
 
-      // validate docx id for download
-      var status = validateDocxID(table_values[i][6])
+      if (first_name == '' || last_name == ''){
+        ui.alert('⚠️ Validation failed ⚠️' , `Both first and last names should be specified, please fill the data and try again`, ui.ButtonSet.OK)
 
-      if (!(status)){
-        ui.alert('⚠️ Validation of Task.docx failed ⚠️' , `Please check the link to docx task for ${first_name} ${last_name} and generate the token again`, ui.ButtonSet.OK)
       }
 
       else{
+        // validate docx id for download
+        var status = validateDocxID(table_values[i][6])
 
-        // generate token
-        var token = genToken(first_name, last_name)
-        while (all_tokens.includes(token)){
-          token = genToken(first_name, last_name)
+        if (!(status)){
+          ui.alert('⚠️ Validation of Task.docx failed ⚠️' , `Please check the link to docx task for ${first_name} ${last_name} and generate the token again`, ui.ButtonSet.OK)
         }
 
-        sheet.getRange(`A${i+1}`).setValue(token)
+        else{
 
+          // generate token
+          var token = genToken(first_name, last_name)
+          while (all_tokens.includes(token)){
+            token = genToken(first_name, last_name)
+          }
+
+          sheet.getRange(`A${i+1}`).setValue(token)
+
+        }
       }
+
     }
   }
 
@@ -64,4 +72,41 @@ function validateDocxID(link_to_docx){
 
   return valid_doc_id
 
+}
+
+function set_new_conditional_form_rules() {
+
+  // Define an array of sheet_names to skip
+  var exception_list = ['Contents']
+  var list_of_sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+
+  // Iterate over every sheet (object) and apply conditional formatting rules
+  for (const local_sheet of list_of_sheets){
+
+    // Skip exception sheets
+    if (!(exception_list.includes(local_sheet.getSheetName()))){
+
+      // Remove all already existing conditional formatting rules
+      local_sheet.setConditionalFormatRules([]);
+
+      // Build new rules
+      var conditionalFormatRules = local_sheet.getConditionalFormatRules();
+      conditionalFormatRules.push(SpreadsheetApp.newConditionalFormatRule()
+      .setRanges([local_sheet.getRange("A1:M")])
+      .whenFormulaSatisfied('=AND($L1=False,NOT($L1=""))')
+      .setBackground('#F4CCCC')
+      .setFontColor('#660000')
+      .build());
+
+      conditionalFormatRules.push(SpreadsheetApp.newConditionalFormatRule()
+      .setRanges([local_sheet.getRange("A1:M")])
+      .whenFormulaSatisfied('=$L1')
+      .setBackground('#D6FFDB')
+      .setFontColor('#274E13')
+      .build());
+
+      // Set new rules to iterating sheet
+      local_sheet.setConditionalFormatRules(conditionalFormatRules);
+    }
+  }
 }
