@@ -72,4 +72,4 @@ time_left_5_min_message = time_left_base_message.replace('TIME_LEFT', '5')
 # customs
 start_already_pushed = 'Your test has already started, use the buttons above to submit answers'
 answer_already_provided = 'Your answer for this task has been already accepted'
-both_answers_have_been_submitted = 'All tasks have been successfully accepted'
+both_answers_have_been_submitted = all_answers_already_submitted
