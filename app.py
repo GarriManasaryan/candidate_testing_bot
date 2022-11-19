@@ -1,3 +1,9 @@
 from telegram_handlers.main_message_and_callback_handlers import *
-print('Download complete')
-bot.polling(none_stop=True, interval=0, timeout=125) # might be the problem of failing → increase timeout (prev value=0)
+print('All libs imported successfully')
+
+@bot_priest()
+def main():
+    bot.polling(none_stop=True, interval=0, timeout=125)
+
+if __name__ == '__main__':
+    main()

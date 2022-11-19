@@ -3,6 +3,7 @@ from logs.custom_logger import *
 import traceback
 
 def get_chat_id_from_call_or_msg(message_or_call):
+    
     try:
         chat_id = message_or_call.message.chat.id # call obj
     except:
@@ -21,10 +22,10 @@ def message_error_handler():
 
         def wrapper_func(*args, **kwargs):
             message_or_call = args[0]
+
             try:
                 logger(message_or_call)
                 result = func(*args, **kwargs)
-
                 return result
 
             except Exception as e:
@@ -34,6 +35,7 @@ def message_error_handler():
 
                 exception_name = (type(e).__name__)
                 logger(message_or_call, repr(e))
+                
                 bot.send_message(chat_id, error_with_developer)
 
                 # notify developer
