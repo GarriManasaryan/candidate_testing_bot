@@ -77,10 +77,13 @@ def process_token_from_candidate(message):
             markup.add(InlineKeyboardButton('Start', callback_data=f'start_the_test_{token_end}')) # removing token might lead to concurrency issues: one user calls functions, overwriting prev calls and reminders
 
             if candidate_info_dict.get('Send_excel_test_too') == 'Yes':
-                bot.send_message(chat_id, full_task_instr, parse_mode='html', reply_markup=markup)
+                bot.send_message(chat_id, full_task_instr, parse_mode='html')
 
             else:
-                bot.send_message(chat_id, just_clinical_task_instr, parse_mode='html', reply_markup=markup)
+                bot.send_message(chat_id, just_clinical_task_instr, parse_mode='html')
+
+            bot.send_message(chat_id, rules_and_warnings, parse_mode='html')
+            bot.send_message(chat_id, instruction_end, parse_mode='html', reply_markup=markup)
 
         except:
             bot.send_message(chat_id, error_downloading_files)
