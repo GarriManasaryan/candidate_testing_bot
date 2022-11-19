@@ -53,9 +53,9 @@ instruction_sending_answers = f'<i>How to send back files with answers?</i>\n\nA
 instruction_all_answers = 'All answers should be submitted in the same file and sent back to this bot'
 instruction_end = 'When you are ready, click "Start". Best of luck :)'
 
-full_task_instr = '\n\n'.join([instruction_start, instruction_clinical_part, instruction_excel, instruction_all_answers, instruction_sending_answers, instruction_end])
-just_clinical_task_instr = '\n\n'.join([instruction_start, instruction_clinical_part, instruction_all_answers, instruction_sending_answers, instruction_end])
-just_excel_instr = '\n\n'.join([instruction_start, instruction_excel, instruction_all_answers, instruction_sending_answers, instruction_end])
+full_task_instr = '\n\n'.join([instruction_start, instruction_clinical_part, instruction_excel, instruction_sending_answers])
+just_clinical_task_instr = '\n\n'.join([instruction_start, instruction_clinical_part, instruction_sending_answers])
+just_excel_instr = '\n\n'.join([instruction_start, instruction_excel, instruction_sending_answers])
 
 # answers
 submit_answers = f'When you are done, press "Submit answers". {sep_file_instr}'
@@ -73,3 +73,6 @@ time_left_5_min_message = time_left_base_message.replace('TIME_LEFT', '5')
 start_already_pushed = 'Your test has already started, use the buttons above to submit answers'
 answer_already_provided = 'Your answer for this task has been already accepted'
 both_answers_have_been_submitted = all_answers_already_submitted
+
+# rules
+rules_and_warnings = 'Important rules:\n\n1. All answers should be submitted in the same file and sent back to this bot\n\n2. Don\'t change the format of sent files.\n\n3. Don\'t rename sent files: as mentioned before, just submit your answers and send them back in the same file.\n\n4. You can submit the answer files only once, so be careful'
