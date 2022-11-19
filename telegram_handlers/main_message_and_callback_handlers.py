@@ -249,7 +249,6 @@ def get_file_msg(message, token_end, mode):
     else:
         bot.send_message(message.chat.id, wrong_answer_file_format)
 
-
 def calculate_spent_time(token_end):
     candidate_info_dict = process_candidate_temp_info(token_end)
     candidate_info_dict['End_time'] = datetime.strftime(datetime.now(),'%H:%M - %d.%m.%Y')
