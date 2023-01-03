@@ -1,4 +1,4 @@
-# Candidate Assessment bot
+# Candidate Assessment Bot
 
 Following bot evaluates candidates hard skills by sending custom assessment files using Telegram API and Google Services (Drive, Sheets, Gmail).
 
