@@ -35,13 +35,13 @@ def user_is_spamming(message, chat_id):
     chat_id_string = str(chat_id)
 
     if chat_id_string != developer_chat_id:
-        with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json')) as f:
+        with open(os.path.join(os.getcwd(), 'spam_defender_files', 'spam_counter.json')) as f:
             spam_counter = json.load(f)
 
         clicked = spam_counter.get(chat_id_string, 0)
         spam_counter[chat_id_string] = clicked + 1
 
-        with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json'), 'w') as f:
+        with open(os.path.join(os.getcwd(), 'spam_defender_files', 'spam_counter.json'), 'w') as f:
             json.dump(spam_counter, f)
 
         if spam_counter.get(chat_id_string) > 3:
@@ -55,7 +55,7 @@ def user_is_spamming(message, chat_id):
         return False
 
 def old_user_handler(user_chat_id, old_user_reason_list):
-    with open(os.path.join(os.getcwd(), 'spam_defender', f'{old_user_reason_list}.json'), 'w') as f:
+    with open(os.path.join(os.getcwd(), 'spam_defender_files', f'{old_user_reason_list}.json'), 'w') as f:
         source_list = banned_list if old_user_reason_list == 'banned_list' else already_processed_users
         source_list.append(user_chat_id)
         json.dump(source_list, f)

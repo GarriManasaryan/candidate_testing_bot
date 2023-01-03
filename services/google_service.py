@@ -29,7 +29,6 @@ class GoogleServiceHandler():
     def generate_service(path_to_json):
         scopes = ['https://www.googleapis.com/auth/drive']
         credentials = service_account.Credentials.from_service_account_file(path_to_json, scopes=scopes)
-        # credentials = ServiceAccountCredentials.from_json_keyfile_name(path_to_json, scopes)
 
         version = 'v3'
         service = build('drive', version, credentials=credentials)

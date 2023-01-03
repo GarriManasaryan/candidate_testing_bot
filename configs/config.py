@@ -24,15 +24,12 @@ spreadsheet_id = credentials.get('spreadsheet_id')
 sheet_name = credentials.get('sheet_name')
 company = credentials.get('company_name')
 
-# spam_defender
-with open(os.path.join(os.getcwd(), 'spam_defender', 'banned_list.json')) as f:
+# spam_defender_files
+with open(os.path.join(os.getcwd(), 'spam_defender_files', 'banned_list.json')) as f:
     banned_list = json.load(f)
 
-with open(os.path.join(os.getcwd(), 'spam_defender', 'already_processed_users.json')) as f:
+with open(os.path.join(os.getcwd(), 'spam_defender_files', 'already_processed_users.json')) as f:
     already_processed_users = json.load(f)
-
-# with open(os.path.join(os.getcwd(), 'spam_defender', 'spam_counter.json')) as f:
-#     spam_counter = json.load(f)
 
 # message templates
 further_instructions_message = 'contact your HR coordinator for further instructions'
