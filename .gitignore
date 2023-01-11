@@ -10,6 +10,8 @@ notes.txt
 
 temp_files/
 spam_defender_files/
+configs/creds_and_tokens.json
+configs/google_service_credentials.json
 
 # Distribution / packaging
 .Python

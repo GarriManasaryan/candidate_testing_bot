@@ -16,9 +16,9 @@ One of the challenges was to limit candidates freedom in the bot, so candidates 
 * get access to other questions;
 * and so on.
 
-Given a department of multiple teams and managers with their custom tasks in a google folder, choosing a particular test to send should be delegated to either managers (assigning in advance) or candidates.
+Given a department of multiple teams and managers with their custom tasks in a google folder, choosing a particular test should be delegated to either managers (assigning in advance) or candidates (clicking from menu of all tasks).
 
-In the original draft bot was sending sections via InlineKeyboardMarkup (buttons) and candidates were free to choose the "assigned" task. While candidates could (accidentally or purposefully) click the wrong section + to limit mentioned above frivolities, the first approach was chosen: managers prepare the tasks and assign them in a google sheet. There a temporary token is generated, giving the candidate a one-time access to take the test, limiting re-entries and cheating :)
+In the original draft bot was sending sections via InlineKeyboardMarkup (buttons) and candidates were free to choose the "assigned" task. While candidates could (accidentally or purposefully) click the wrong section + to limit mentioned above frivolities, the first approach was chosen: managers prepare the tasks and assign them in a google sheet. Then a temporary token is generated, giving the candidate a one-time access to take the test, limiting re-entries and cheating :)
 
 Long story short (workflow):
 
@@ -34,3 +34,6 @@ Long story short (workflow):
     * creates a separate google folder for the candidate;
     * sends email notifications to manager;
     * expires token.
+
+<!-- ## Install -->
+<!-- excel и прочее в setup + про пароль в  пассворд и весь credentials-->

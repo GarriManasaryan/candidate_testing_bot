@@ -39,8 +39,8 @@ class GoogleServiceHandler():
         scope = ['https://spreadsheets.google.com/feeds',
                  'https://www.googleapis.com/auth/drive']
 
-        credentials_gm = ServiceAccountCredentials.from_json_keyfile_name(path_to_service_account_json, scope)
-        auth_gsr = gspread.authorize(credentials_gm)
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(path_to_service_account_json, scope)
+        auth_gsr = gspread.authorize(credentials)
         return auth_gsr
 
     def docs_downloader_from_drive(self, fileId):

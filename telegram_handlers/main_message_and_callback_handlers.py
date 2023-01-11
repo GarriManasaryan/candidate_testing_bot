@@ -4,6 +4,7 @@ from services.google_service import *
 from time import sleep
 from datetime import datetime, timedelta
 from bot_reboot.ressurection_handler import *
+from logs.custom_logger import *
 
 # connect to drive and google_sheets
 gsr = GoogleServiceHandler()
@@ -102,8 +103,9 @@ def process_token_from_candidate(message):
             bot.send_message(chat_id, rules_and_warnings, parse_mode='html')
             bot.send_message(chat_id, instruction_end, parse_mode='html', reply_markup=markup)
 
-        except:
+        except Exception as e:
             bot.send_message(chat_id, error_downloading_files)
+            log_to_bot_txt(repr(e))
 
 def process_candidate_temp_info(token_end, mode = 'get_all', candidate_dict = 'provided_with_save_mode', file_name = 'provided_with_files_mode'):
     path_to_file = os.path.join(os.getcwd(), 'temp_files', f'user_{token_end}.json')
@@ -203,8 +205,9 @@ def sent_answer_files_are_in_correct_format(message, mode):
 
 def google_logger(msg_text):
     print(msg_text)
-    with open(os.path.join(os.getcwd(), 'temp_files', 'bot_logs.txt'), 'a') as f:
-        f.write(f'{msg_text}\n')
+    log_to_bot_txt(msg_text)
+    # with open(os.path.join(os.getcwd(), 'temp_files', 'bot_logs.txt'), 'a') as f:
+    #     f.write(f'{msg_text}\n')
 
 @message_error_handler()
 def get_file_msg(message, token_end, mode):
@@ -239,7 +242,7 @@ def get_file_msg(message, token_end, mode):
 
             # email notification to manager
             destination_email = candidate_info_dict['CIT_team_lead_email']
-            subject = f'Candidate {last_name} {first_name} finished the test'
+            subject = f'Candidate {last_name} {first_name} has finished the test'
             link_to_main_google = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
             body = f'Link to candidate\'s results:\n\n{link_to_main_google}'
 

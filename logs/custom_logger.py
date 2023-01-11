@@ -2,6 +2,10 @@ from datetime import datetime, timedelta
 from bot_base.bot_main import *
 import os
 
+def log_to_bot_txt(line_to_log):
+    with open(os.path.join(os.getcwd(), 'temp_files', 'bot_logs.txt'), 'a') as f:
+        f.write(line_to_log)
+
 def logger(message_or_call, error_msg = 'Successful'):
     date = datetime.strftime(datetime.now() + timedelta(hours=8),'%d-%m-%Y:%H-%M')
 
@@ -23,5 +27,4 @@ def logger(message_or_call, error_msg = 'Successful'):
 
     print(final_log)
 
-    with open(os.path.join(os.getcwd(), 'temp_files', 'bot_logs.txt'), 'a') as f:
-        f.write(f'{final_log}\n')
+    log_to_bot_txt(f'{final_log}\n')

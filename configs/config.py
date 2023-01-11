@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import os
 
-with open (Path.home().joinpath('creds_and_tokens.json')) as f:
+with open (os.path.join(os.getcwd(), 'configs', 'creds_and_tokens.json')) as f:
     credentials = json.load(f)
 
 # telegram token
@@ -14,7 +14,7 @@ email_password = credentials.get('EMAIL_PASSWORD')
 email_from = credentials.get('EMAIL_FROM')
 
 # google service
-path_to_google_drive_service_account_json = Path.home().joinpath('google_drive_service.json')
+path_to_google_drive_service_account_json = os.path.join(os.getcwd(), 'configs', 'google_service_credentials.json')
 
 # path to save downloaded files
 path_to_download = os.path.join(os.getcwd(), 'downloaded_tasks')
