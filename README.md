@@ -13,14 +13,13 @@ One of the challenges was to limit candidates freedom in the bot, so candidates 
 
 * re-enter and start the test again (if time runs out, for instance);
 * reload answers after finishing the test;
-* get access to other questions;
-* and so on.
+* get access to other questions and so on.
 
-Given a department of multiple teams and managers with their custom tasks in a google folder, choosing a particular test should be delegated to either managers (assigning in advance) or candidates (clicking from menu of all tasks).
+Which raised another issue: how to design the process of task choosing? In the original approach bot had a menu-like architecture, where candidate could choose a section, then fall down deeper (inner modules) and finally get to assigned tasks. Given a department of multiple teams and managers with their custom tasks, menu-like model was promising.
 
-In the original draft bot was sending sections via InlineKeyboardMarkup (buttons) and candidates were free to choose the "assigned" task. While candidates could (accidentally or purposefully) click the wrong section + to limit mentioned above frivolities, the first approach was chosen: managers prepare the tasks and assign them in a google sheet. Then a temporary token is generated, giving the candidate a one-time access to take the test, limiting re-entries and cheating :)
+But in this case candidates could (accidentally or purposefully) click (and access) wrong tasks. To address mentioned above frivolities, the "password" approach was chosen: managers prepare the tasks and _assign_ to candidates specific tests (so there is no possibility of misclicks and wrong access from users). After task preparation, a temporary token is generated, giving the candidate a one-time access to take the test, which automatically limits re-entries and any other forms of cheating :)
 
-Long story short (workflow):
+Long story short general workflow looks like this:
 
 1. Manager fills a new row for candidate in a google sheet: name, email, testing modes (extra excel tasks) and adds link to the main google doc with tasks.
 2. Generates access-token. <!-- TODO добавить гифку -->
