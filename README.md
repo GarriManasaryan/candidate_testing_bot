@@ -2,6 +2,8 @@
 
 Following bot evaluates candidates hard skills by sending custom assessment files using Telegram API and Google Services (Drive, Sheets, Gmail).
 
+https://user-images.githubusercontent.com/114534753/216451037-303cfdb4-7bd8-4d7c-825b-814a591920c9.mp4
+
 ## Overview
 
 Test assessment is divided into two parts:
