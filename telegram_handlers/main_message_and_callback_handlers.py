@@ -9,7 +9,8 @@ from logs.custom_logger import *
 # connect to drive and google_sheets
 gsr = GoogleServiceHandler()
 
-@bot.message_handler(content_types=['text'])
+
+@bot.message_handler(content_types=["text"])
 @message_error_handler()
 def welcome(message):
     chat_id = message.chat.id
@@ -23,13 +24,14 @@ def welcome(message):
     else:
         text = message.text
 
-        if text == '/start':
+        if text == "/start":
             if user_is_spamming(message, chat_id):
                 bot.send_message(chat_id, banned_message)
 
             else:
                 msg = bot.send_message(chat_id, welcome_message)
                 bot.register_next_step_handler(msg, process_token_from_candidate)
+
 
 @message_error_handler()
 def user_is_spamming(message, chat_id):
@@ -55,6 +57,7 @@ def user_is_spamming(message, chat_id):
     else:
         return False
 
+
 def old_user_handler(user_chat_id, old_user_reason_list):
     with open(os.path.join(os.getcwd(), 'spam_defender_files', f'{old_user_reason_list}.json'), 'w') as f:
         source_list = banned_list if old_user_reason_list == 'banned_list' else already_processed_users
@@ -78,27 +81,38 @@ def process_token_from_candidate(message):
     else:
         df_candidate = df_all_candidates[df_all_candidates['token'] == token]
         candidate_info_dict = df_candidate.to_dict('records')[0]
-        candidate_info_dict['submitted_excel_answer'] = True if candidate_info_dict['Send_excel_test_too'] != 'Yes' else False
+        candidate_info_dict['Send_excel_test_too'] = 'Yes' if candidate_info_dict.get("Link_to_excel_task") else 'No'
+        candidate_info_dict['submitted_excel_answer'] = True if not candidate_info_dict.get("Link_to_excel_task") else False
         candidate_info_dict['submitted_docx_answer'] = False
 
         token_end = token.split('-')[-1]
 
+        docx_file_name = f'clinical_task_{token_end}.docx'
+        candidate_info_dict['docx_source_file'] = docx_file_name
+
+        xlsx_file_name = f'excel_task_{token_end}.xlsx'
+        candidate_info_dict['xlsx_source_file'] = xlsx_file_name
+
+        # save
         process_candidate_temp_info(token_end, 'save_dict', candidate_info_dict)
 
         bot.send_message(chat_id, file_download)
 
         try:
-            fileId = candidate_info_dict.get('Link_to_docx_task').split('/')[-2]
-            gsr.docs_downloader_from_drive(fileId = fileId)
 
-            markup = InlineKeyboardMarkup(row_width=2)
-            markup.add(InlineKeyboardButton('Start', callback_data=f'start_the_test_{token_end}')) # removing token might lead to concurrency issues: one user calls functions, overwriting prev calls and reminders
+            docx_fileId = candidate_info_dict.get('Link_to_docx_task').split('/')[-2]
+            gsr.file_downloader_from_drive(file_name=docx_file_name, file_id=docx_fileId, file_type='docx')
 
             if candidate_info_dict.get('Send_excel_test_too') == 'Yes':
+                excel_fileId = candidate_info_dict.get('Link_to_excel_task').split('/')[-2]
+                gsr.file_downloader_from_drive(file_name=xlsx_file_name, file_id=excel_fileId, file_type='xlsx')
                 bot.send_message(chat_id, full_task_instr, parse_mode='html')
 
             else:
                 bot.send_message(chat_id, just_clinical_task_instr, parse_mode='html')
+
+            markup = InlineKeyboardMarkup(row_width=2)
+            markup.add(InlineKeyboardButton('Start', callback_data=f'start_the_test_{token_end}')) # removing token might lead to concurrency issues: one user calls functions, overwriting prev calls and reminders
 
             bot.send_message(chat_id, rules_and_warnings, parse_mode='html')
             bot.send_message(chat_id, instruction_end, parse_mode='html', reply_markup=markup)
@@ -217,7 +231,7 @@ def get_file_msg(message, token_end, mode):
         first_name = candidate_info_dict.get('First_name', 'First_name')
         last_name = candidate_info_dict.get('Last_name', 'Last_name')
 
-        file_name = '_'.join([last_name, first_name, token_end[:4], message.document.file_name])
+        file_name = '_'.join([last_name, first_name, message.document.file_name])
 
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
@@ -232,6 +246,9 @@ def get_file_msg(message, token_end, mode):
         both_tasks_are_finished, candidate_info_dict = check_if_both_tasks_are_finished(token_end)
 
         if both_tasks_are_finished:
+
+            bot.send_message(message.chat.id, processing_files_upload)
+
             # create google folder with candidate's answer
             upload_to_google_folder(token_end, candidate_info_dict)
             google_logger('-> Saved files to google drive')
@@ -247,7 +264,9 @@ def get_file_msg(message, token_end, mode):
             body = f'Link to candidate\'s results:\n\n{link_to_main_google}'
 
             gsr.send_email_confirmation(destination_email, subject, body)
-            google_logger('-> Sent a confirmation email')
+            google_logger("-> Sent a confirmation email")
+
+            bot.send_message(message.chat.id, final_success)
 
     else:
         bot.send_message(message.chat.id, wrong_answer_file_format)
@@ -298,9 +317,10 @@ def callback_handler(call):
                     excel_finish_time_5_min_reminder = datetime.now() + timedelta(hours = timedelta_time_left_5_min)
 
                     if excel_test_too_flag == 'Yes':
-                        bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Excel_task.xlsx'), 'rb'), caption = instruction_time_limit_excel, parse_mode='html')
 
-                    bot.send_document(chat_id = chat_id, document = open(os.path.join(path_to_download, 'Clinical_task.docx'), 'rb'), caption = instruction_time_limit_clinical, parse_mode='html')
+                        bot.send_document(chat_id=chat_id, document=open(os.path.join(path_to_download, candidate_info_dict['xlsx_source_file']), 'rb'), caption=instruction_time_limit_excel, parse_mode='html')
+
+                    bot.send_document(chat_id=chat_id, document=open(os.path.join(path_to_download, candidate_info_dict['docx_source_file']), 'rb'), caption=instruction_time_limit_clinical, parse_mode='html')
 
                     markup = InlineKeyboardMarkup(row_width=2)
                     markup.add(InlineKeyboardButton('Submit answers', callback_data=f'submit_answers_main_{token_end}'))
