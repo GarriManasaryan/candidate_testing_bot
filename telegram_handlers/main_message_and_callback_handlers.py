@@ -37,7 +37,7 @@ def welcome(message):
 def user_is_spamming(message, chat_id):
     chat_id_string = str(chat_id)
 
-    if chat_id_string != developer_chat_id:
+    if not chat_id_string in exception_chats:
         with open(os.path.join(os.getcwd(), 'spam_defender_files', 'spam_counter.json')) as f:
             spam_counter = json.load(f)
 
@@ -47,7 +47,7 @@ def user_is_spamming(message, chat_id):
         with open(os.path.join(os.getcwd(), 'spam_defender_files', 'spam_counter.json'), 'w') as f:
             json.dump(spam_counter, f)
 
-        if spam_counter.get(chat_id_string) > 3:
+        if spam_counter.get(chat_id_string) > 8:
             old_user_handler(chat_id, 'banned_list')
             return True
 
@@ -70,9 +70,11 @@ def process_token_from_candidate(message):
     chat_id = message.chat.id
 
     bot.send_message(chat_id, verifying_token)
-    sleep(1)
 
+    # better to create cron and save canidates df.csv to temp (accelarates token verification)
+    sleep(1)
     df_all_candidates, worksheet = gsr.get_google_sheet_df()
+    # df_all_candidates = pd.read_csv(os.path.join(os.getcwd(), 'temp_files', 'cit_canidates.csv'))
     all_tokens = set(df_all_candidates['token'])
 
     if not token in all_tokens:
@@ -317,10 +319,10 @@ def callback_handler(call):
                     excel_finish_time_5_min_reminder = datetime.now() + timedelta(hours = timedelta_time_left_5_min)
 
                     if excel_test_too_flag == 'Yes':
+                        # arg = document / data
+                        bot.send_document(chat_id=chat_id, data=open(os.path.join(path_to_download, candidate_info_dict['xlsx_source_file']), 'rb'), caption=instruction_time_limit_excel, parse_mode='html')
 
-                        bot.send_document(chat_id=chat_id, document=open(os.path.join(path_to_download, candidate_info_dict['xlsx_source_file']), 'rb'), caption=instruction_time_limit_excel, parse_mode='html')
-
-                    bot.send_document(chat_id=chat_id, document=open(os.path.join(path_to_download, candidate_info_dict['docx_source_file']), 'rb'), caption=instruction_time_limit_clinical, parse_mode='html')
+                    bot.send_document(chat_id=chat_id, data=open(os.path.join(path_to_download, candidate_info_dict['docx_source_file']), 'rb'), caption=instruction_time_limit_clinical, parse_mode='html')
 
                     markup = InlineKeyboardMarkup(row_width=2)
                     markup.add(InlineKeyboardButton('Submit answers', callback_data=f'submit_answers_main_{token_end}'))

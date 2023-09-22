@@ -39,10 +39,6 @@ class GoogleServiceHandler:
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-        self.google_sheets_mimetype = (
-            "application/vnd.google-apps.spreadsheet"
-        )
-
     @staticmethod
     def generate_service(path_to_json):
         scopes = ["https://www.googleapis.com/auth/drive"]

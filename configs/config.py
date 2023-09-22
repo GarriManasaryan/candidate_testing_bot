@@ -113,6 +113,7 @@ error_with_developer = (
     f"An error occurred, plz contact {developer} for further instructions"
 )
 developer_chat_id = credentials["developer_chat_id"]
+exception_chats = credentials["exception_chats"]
 error_for_developer = (
     "An error occurred for this user, plz take a look at bot logs and tracebacks"
 )
